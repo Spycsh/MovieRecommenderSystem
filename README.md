@@ -1,4 +1,4 @@
-# RecommendationSystem
+# RecommenderSystem
 
 https://www.youtube.com/watch?v=uGbZ_E6Rc0Y
 

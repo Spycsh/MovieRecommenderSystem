@@ -1,5 +1,22 @@
 # RecommenderSystem
 
+- [x] create Maven project, specify dependencies
+
+- [] establish the connection between database
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Extra Reading
 https://www.youtube.com/watch?v=uGbZ_E6Rc0Y
 
 Recommendation System are divided into following categories:

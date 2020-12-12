@@ -2,7 +2,7 @@
 
 - [x] create Maven project, specify dependencies
 
-- [] establish the connection between database
+- [ ] establish the connection between database
 
 
 

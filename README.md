@@ -2,8 +2,9 @@
 
 - [x] create Maven project, specify dependencies
 
-- [ ] establish the connection between database
+- [x] establish the connection between database
 
+- [] offline recommender
 
 
 

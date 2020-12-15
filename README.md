@@ -4,7 +4,7 @@
 
 - [x] establish the connection between database
 
-- [] offline recommender
+- [ ] offline recommender
 
 
 

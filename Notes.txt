@@ -14,3 +14,12 @@ To see mongo
 > use recommender
 > show tables
 > db.Movie.find().count()   // 2791
+
+
+// test statisticRecommender
+// execute scala file
+// in mongo
+> show tables          // exist 4 more tables
+> db.AverageMovies.findOne()
+> db.GenresTopMovies.find().pretty()
+

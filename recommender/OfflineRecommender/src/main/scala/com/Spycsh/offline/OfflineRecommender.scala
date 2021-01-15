@@ -60,6 +60,7 @@ object OfflineRecommender {
     val movieRDD = ratingRDD.map(_._2).distinct()
 
     // train LFM model
+    // Rating is in MLlib parameters: (user, product, rating)
     val trainData = ratingRDD.map( x => Rating(x._1, x._2, x._3) )
 
     val (rank, iterations, lambda) = (200, 5, 0.1)
@@ -101,7 +102,7 @@ object OfflineRecommender {
       }
       .map{
         case (a, b) => {
-          val simScore = this.consinSim(a._2, b._2)
+          val simScore = this.cosinSim(a._2, b._2)
           ( a._1, ( b._1, simScore ) )
         }
       }
@@ -122,7 +123,7 @@ object OfflineRecommender {
   }
 
   // calculate the cosine of two feature vectors
-  def consinSim(movie1: DoubleMatrix, movie2: DoubleMatrix):Double ={
+  def cosinSim(movie1: DoubleMatrix, movie2: DoubleMatrix):Double ={
     movie1.dot(movie2) / ( movie1.norm2() * movie2.norm2() )
   }
 

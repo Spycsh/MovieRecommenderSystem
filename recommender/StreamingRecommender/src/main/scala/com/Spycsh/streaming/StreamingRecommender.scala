@@ -125,10 +125,58 @@ object StreamingRecommender {
     ssc.awaitTermination()
   }
 
+  import scala.collection.JavaConversions._
 
+  def getUserRecentlyRating(num: Int, uid: Int, jedis: Jedis): Array[(Int, Double)] = {
+    // read data from redis, save the user rating data into a queue of uid:UID,
+    jedis.lrange("uid:" + uid, 0, num-1)
+      .map{
+        item =>
+          val attr = item.split("\\:")
+          ( attr(0).trim.toInt, attr(1).trim.toDouble )
 
+      }
+      .toArray
+  }
 
+  def getTopSimMovies(num: Int, mid: Int, uid: Int, simMovies: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]])
+                     (implicit mongoConfig: MongoConfig): Array[Int] ={
+    //  1. get all the similar movies from the similarity matrix
+    val allSimMovies = simMovies(mid).toArray
 
+    //  2. get the movies that the user has already seen
+    val ratingExist = ConnHelper.mongoClient(mongoConfig.db)(MONGODB_RATING_COLLECTION)
+      .find( MongoDBObject("uid" -> uid))
+      .toArray
+      .map{
+        item => item.get("mid").toString.toInt
+      }
 
+    // 3. filter out the movies that have been seen, and get the output list
+    allSimMovies.filter(x=> ! ratingExist.contains(x._1))
+      .sortWith(_._2>_._2)
+      .take(num)
+      .map(x=>x._1)
+  }
+
+  def computeMovieScores(candidateMovies: Array[Int],
+                         userRecentlyRatings: Array[(Int, Double)],
+                         simMovies: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]]): Array[(Int, Double)] = {
+
+  }
+
+  def getMoviesSimScore(mid1: Int, mid2: Int, simMovies: scala.collection.Map[Int,
+    scala.collection.immutable.Map[Int, Double]]): Double ={
+
+  }
+
+  def log(m:Int):Double = {
+    val N = 10
+    math.log(m) / math.log(N)
+  }
+
+  def saveDataToMongoDB(uid: Int, streamRecs: Array[(Int, Double)])(implicit mongoConfig: MongoConfig): Unit ={
+
+  }
 
 }

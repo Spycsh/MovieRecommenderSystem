@@ -8,7 +8,7 @@
 
 - [x] offline recommender
 
-- [ ] streaming recommender
+- [x] streaming recommender
 
 - [ ] content recommender
 
@@ -42,10 +42,23 @@ use Spark Core + Spark MLlib and ALS to implement offline recommender
 - from the similarity of movies, recommend a list of similar movies for a movie (use cosine similarity)
 
 ### StreamingRecommender
-Recommend in real-time, and
-use Flume-ng to collect one single rating behavior of user and in real-time send to Kafka
-use Kafka as the cache component and receive the data collection requests from Flume to push the data 
-to the spark streaming recommender, and process to update the MongoDB
+Recommend in real-time, by collecting one single rating behavior of user in real-time send to Kafka, 
+and process, compute the real-time recommendation list to update the MongoDB
+
+* get the latest K times of rating from redis
+* from similarity matrix, extract N most similar movies as the candidate list
+* for every candidate movie, calculate the score and sort as current user's recommendation list
+
+$Score_q = \frac{\sigma_r(sim(q,r) * R_r)}{sim_sum} + log(max(incount, 1)) - log(max(recount, 1))$
+
+q: the candidate movie
+r: the movie the user has rated (data from Kafka stream)
+sim(q, r): similarity of the rated movie and candidate movie
+log(max(incount, 1)): log of the max of the positive rate score(from 3 to 5) and 1, which means if no rating then this term is log(1) = 0
+log(max(recount, 1)): log of the max of the negative rate score(from 1 to 3) and 1, which means if no rating then this term is log(1) = 0
+
+The two log terms is to indicate that although there is a high basic score of the movie q based on similarity, if the user has a low score, 
+it should be prevented from being recommended.
 
 
 

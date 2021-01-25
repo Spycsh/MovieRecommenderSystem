@@ -2,22 +2,22 @@ jdk 1.8
 
 run dataloader
 
-To access elasticsearch
-> cd ~\elasticsearch-5.6.2\bin
-> elasticsearch
+###########To access elasticsearch###########
+=> cd ~\elasticsearch-5.6.2\bin
+=> elasticsearch
 access localhost:9200
 http://localhost:9200/_cat/indices
 http://localhost:9200/_search?pretty
 
 
-To see mongo
-> mongo
+###########To see mongo#################
+=> mongo
 > show dbs
 > use recommender
 > show tables
 > db.Movie.find().count()   // 2791
 
-
+###################
 // test statisticRecommender
 // execute scala file
 // in mongo
@@ -25,3 +25,71 @@ To see mongo
 > db.AverageMovies.findOne()
 > db.GenresTopMovies.find().pretty()
 
+############To access redis##############
+https://www.runoob.com/redis/redis-install.html
+
+In one cmd
+=> redis-server.exe redis.windows.conf
+
+In another cmd
+=> redis-cli.exe -h 127.0.0.1 -p 6379
+127.0.0.1:6379> set myKey abc
+127.0.0.1:6379> get myKey
+127.0.0.1:6379> RPUSH mylist "one"
+127.0.0.1:6379> lrange mylist 0 1
+
+#############
+1) For streaming recommender, you should firstly open mongo, redis server, and redis-cli as above
+
+In redis-cli, to simulate a user's rate of an item (stand for he has watched it), enter
+127.0.0.1:6379> lpush uid:2 265:5.0 266:5.0 272:3.0 273:4.0 292:3.0 296:4.0 300:3.0
+127.0.0.1:6379> keys *
+there should be a key-value pair about the uid:2 user, you can see the records with
+127.0.0.1:6379> lrange uid:2 0 -1
+
+2) Then you should open the zookeeper, Kafka server and the Kafka producer
+In one cmd, open the zookeeper
+=> C:\kafka\bin\windows>zookeeper-server-start.bat ..\..\config\zookeeper.properties
+then open the Kafka
+=> C:\kafka\bin\windows>kafka-server-start.bat ..\..\config\server.properties
+you can use jps to see the on-going java processes
+=> C:\Users\Spycsh>jps
+  11808 StreamingRecommender
+  14100
+  21844 NailgunRunner
+  11928 Jps
+  15560 QuorumPeerMain
+  20860 Kafka
+
+then open the Kafka producer, you should assign the topic "recommender" as in the code
+=> C:\kafka\bin\windows>kafka-console-producer.bat --broker-list localhost:9092 --topic recommender
+
+3) Then you can run the StreamingRecommender.scala
+In the Kafka producer cmd you can:
+transfer one record to test in the format "UID|MID|SCORE|TIMESTAMP" into the rating stream
+> 2|1271|4.5|1554276432
+Then you will find one line rating data coming! >>>>>>>>>>>>>> in the console of the program
+
+4) See the results
+Then in the cmd you start your mongo service
+> use recommender
+you will find a new database called StreamRecs
+and you can show the final recommended movies with
+> db.StreamRecs.find().pretty()
+Such output will come out
+{
+        "_id" : ObjectId("600eee1cb886bb5a009cdb8d"),
+        "uid" : 2,
+        "recs" : [
+                {
+                        "mid" : 3038,
+                        "score" : 3.5943022980420656
+                },
+                {
+                        "mid" : 2927,
+                        "score" : 3.531732510562273
+                },
+                ....
+                ]}
+
+Then you realize that you save the recommended movies list for a user related to his real-time click into the mongo DB.

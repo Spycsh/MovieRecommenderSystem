@@ -30,7 +30,7 @@ case class MovieRecs( mid: Int, recs: Seq[Recommendation] )
 object StreamingRecommender {
   val MAX_USER_RATING_NUM = 20
   val MAX_SIM_MOVIES_NUM = 20
-  val MONGODB_STREAM_RECS_COLLECTION = "SteamRecs"
+  val MONGODB_STREAM_RECS_COLLECTION = "StreamRecs"
   val MONGODB_RATING_COLLECTION = "Rating"
   val MONGODB_MOVIE_RECS_COLLECTION = "MovieRecs"
 
@@ -108,7 +108,7 @@ object StreamingRecommender {
             // 2. from similarity matrix, extract N most similar movies as the candidate list, Array[mid]
             val candidateMovies = getTopSimMovies(MAX_SIM_MOVIES_NUM, mid, uid, simMovieMatrixBroadCast.value)
 
-            // 3. for every candidate movie, calculate the current user's recommendation list, Array[(mid, score)]
+            // 3. for every candidate movie, calculate the score and sort as current user's recommendation list, Array[(mid, score)]
             val streamRecs = computeMovieScores(candidateMovies, userRecentlyRatings, simMovieMatrixBroadCast.value)
 
             // 4. save the recommendation data into mongodb
@@ -162,21 +162,65 @@ object StreamingRecommender {
   def computeMovieScores(candidateMovies: Array[Int],
                          userRecentlyRatings: Array[(Int, Double)],
                          simMovies: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]]): Array[(Int, Double)] = {
+    // define an ArrayBuffer, which is used to save the basic score of every candidate movie
+    val scores = scala.collection.mutable.ArrayBuffer[(Int, Double)]()
+    // define a HashMap and save the enhancing and attenuation factor
+    val increMap = scala.collection.mutable.HashMap[Int, Int]()
+    val decreMap = scala.collection.mutable.HashMap[Int, Int]()
+
+    for( candidateMovie <- candidateMovies; userRecentlyRating <- userRecentlyRatings){
+      // get the similarity of the candidate movies and the recently rating movie
+      val simScore = getMoviesSimScore(candidateMovie, userRecentlyRating._1, simMovies)
+
+      if(simScore > 0.7) {
+        // calculate the basic score of the candidate movie
+        scores += ((candidateMovie, simScore * userRecentlyRating._2))
+        if (userRecentlyRating._2 > 3) {
+          increMap(candidateMovie) = increMap.getOrDefault(candidateMovie, 0) + 1
+        } else {
+          decreMap(candidateMovie) = decreMap.getOrDefault(candidateMovie, 0) + 1
+        }
+      }
+    }
+
+    // based on the formula, groupby mid of the candidate movie, compute the recommendation rating
+    scores.groupBy(_._1).map {
+      // data structure after groupBy: Map( mid -> ArrayBuffer[(mid, score)])
+      // !!! CORE FORMULA HERE !!! //
+      case (mid, scoreList) =>
+        (mid, scoreList.map(_._2).sum / scoreList.length + log(increMap.getOrDefault(mid, 1)) - log(decreMap.getOrDefault(mid, 1)))
+    }.toArray.sortWith(_._2>_._2)
 
   }
 
+  // get the similarity of the two movies
   def getMoviesSimScore(mid1: Int, mid2: Int, simMovies: scala.collection.Map[Int,
     scala.collection.immutable.Map[Int, Double]]): Double ={
 
+    simMovies.get(mid1) match {
+      case Some(sims) => sims.get(mid2) match {
+        case Some(score) => score
+        case None => 0.0  // if no rating of movie id, return 0.0
+      }
+      case None => 0.0  // if no record of movie id, return 0.0
+    }
   }
 
+  // get the log of one number, base 10
   def log(m:Int):Double = {
     val N = 10
     math.log(m) / math.log(N)
   }
 
   def saveDataToMongoDB(uid: Int, streamRecs: Array[(Int, Double)])(implicit mongoConfig: MongoConfig): Unit ={
+    // define the connection to StreamRecs table
+    val streamRecsCollection = ConnHelper.mongoClient(mongoConfig.db)(MONGODB_STREAM_RECS_COLLECTION)
 
+    // if there is already data that corresponding to uid, delete
+    streamRecsCollection.findAndRemove(MongoDBObject("uid" -> uid))
+    // save the data in streamRecs into the table
+    streamRecsCollection.insert(MongoDBObject( "uid"->uid,
+    "recs"->streamRecs.map(x=>MongoDBObject("mid"->x._1, "score"->x._2))))
   }
 
 }

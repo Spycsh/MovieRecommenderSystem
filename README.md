@@ -10,7 +10,7 @@
 
 - [x] streaming recommender
 
-- [ ] content recommender
+- [x] content recommender
 
 ## Modules introduction
 

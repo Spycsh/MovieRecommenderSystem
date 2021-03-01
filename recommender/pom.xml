@@ -15,6 +15,7 @@
         <module>DataLoader</module>
         <module>StatisticsRecommender</module>
         <module>StreamingRecommender</module>
+        <module>ContentRecommender</module>
         <!--        <module>StatisticsRecommender</module>-->
 <!--        <module>OfflineRecommender</module>-->
 <!--        <module>StreamingRecommender</module>-->

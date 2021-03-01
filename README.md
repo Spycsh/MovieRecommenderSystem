@@ -60,6 +60,16 @@ log(max(recount, 1)): log of the max of the negative rate score(from 1 to 3) and
 The two log terms is to indicate that although there is a high basic score of the movie q based on similarity, if the user has a low score, 
 it should be prevented from being recommended.
 
+### ContentRecommender
+From the DataLoader module we store the data of a movie with attributes like movie id, name, description, timelong, issue, 
+    genres, shoot time, language, actors and directors. We can assume that the key attributes are the genres, the description, actors, director.
+    Especially the genres attribute which we can use to do a cold start (ask users which genres they prefer when they first register and we have no user profile of him).
+    We can simply apply one-hot encoding on genres (flattern) but usually different genres should have different weights. (e.g. Most war films are action films so a film with a war tag should be more valuable to use)
+    In such case can we use tf-idf algorithms, rather than ALS, to solve the problem.
+
+In this system tf-idf is used on the genres features and generate a Table named ContentMovieRecs in MongoDB, and this part
+can be also combined with Kafka streaming as implemented in Streaming recommender module.
+
 
 
 

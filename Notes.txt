@@ -93,3 +93,8 @@ Such output will come out
                 ]}
 
 Then you realize that you save the recommended movies list for a user related to his real-time click into the mongo DB.
+
+##########
+For content recommender
+> db.ContentMovieRecs.find().pretty()
+

@@ -54,8 +54,10 @@ $Score_q = \frac{\sigma_r(sim(q,r) * R_r)}{sim_sum} + log(max(incount, 1)) - log
 q: the candidate movie
 r: the movie the user has rated (data from Kafka stream)
 sim(q, r): similarity of the rated movie and candidate movie
-log(max(incount, 1)): log of the max of the positive rate score(from 3 to 5) and 1, which means if no rating then this term is log(1) = 0
-log(max(recount, 1)): log of the max of the negative rate score(from 1 to 3) and 1, which means if no rating then this term is log(1) = 0
+
+log(max(incount, 1)): log of the max of the number of positive rate score(from 3 to 5) and 1, if no rating then this term is log(1) = 0
+
+log(max(recount, 1)): log of the max of the number of negative rate score(from 1 to 3) and 1, if no rating then this term is log(1) = 0
 
 The two log terms is to indicate that although there is a high basic score of the movie q based on similarity, if the user has a low score, 
 it should be prevented from being recommended.

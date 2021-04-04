@@ -1,5 +1,7 @@
 # RecommenderSystem
 
+[https://spycsh.github.io/blog/2021/04/02/%E7%94%B5%E5%BD%B1%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/](https://spycsh.github.io/blog/2021/04/02/%E7%94%B5%E5%BD%B1%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/)
+
 - [x] create Maven project, specify parent-children dependencies
 
 - [x] establish the connection to Mongo database

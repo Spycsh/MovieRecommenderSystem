@@ -6,24 +6,20 @@ import java.util.Date
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-case class Movie(mid: Int, name: String, descri: String, timelong: String, issue: String,
-                 shoot: String, language: String, genres: String, actors: String, directors: String)
+case class Movie(mid: Int, title: String, genres: String)
 
 case class Rating(uid: Int, mid: Int, score: Double, timestamp: Int )
 
 case class MongoConfig(uri:String, db:String)
 
-// 定义一个基准推荐对象， GenresRecommendation中的Recommendation，后面还会用
 case class Recommendation( mid: Int, score: Double )
 
-// 定义电影类别top10推荐对象(ten of Recommendation)
 case class GenresRecommendation( genres: String, recs: Seq[Recommendation] )
 
 object StatisticsRecommender {
   val MONGODB_MOVIE_COLLECTION = "Movie"
   val MONGODB_RATING_COLLECTION = "Rating"
 
-  //统计的表的名称
   // after finding out hot movies, the data should be write to the database
   // with following table names
   // 1. history hottest table
@@ -31,20 +27,18 @@ object StatisticsRecommender {
   // 2. recently hot movies
   val RATE_MORE_RECENTLY_MOVIES = "RateMoreRecentlyMovies"
   // 3. average rate of movies
-  val AVERAGE_MOVIES = "AverageMovies"  // 平均评分
+  val AVERAGE_MOVIES = "AverageMovies"
   // 4. top movies for different genres
-  val GENRES_TOP_MOVIES = "GenresTopMovies" // 按照类别最高的
+  val GENRES_TOP_MOVIES = "GenresTopMovies"
 
   def main(args: Array[String]): Unit = {
     val config = Map(
       "spark.cores" -> "local[*]",
-      "mongo.uri" -> "mongodb://localhost:27017/recommender",
-      "mongo.db" -> "recommender"
+      "mongo.uri" -> "mongodb://localhost:27017/recommender2021",
+      "mongo.db" -> "recommender2021"
     )
-    // 创建一个sparkConf
-    val sparkConf = new SparkConf().setMaster(config("spark.cores")).setAppName("StatisticsRecommeder")
 
-    // 创建一个SparkSession
+    val sparkConf = new SparkConf().setMaster(config("spark.cores")).setAppName("StatisticsRecommeder")
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
 
     import spark.implicits._
@@ -77,8 +71,9 @@ object StatisticsRecommender {
 
     // 2. RECENTLY hottest movies statistics, following "yyyyMM" to select the recently rating data and count
     val simpleDateFormat = new SimpleDateFormat("yyyyMM");
-    // register udf and turn the timestamp into year month pattern
+    // register udf(user defined function) and turn the timestamp into year month pattern
     // ORIGINAL TIMESTAMP IS based on second, so we need to multiply 1000 and turn it to long
+    // 1260759144000 => 201605
     // to get the millisecond as input
     // and finally turn it to year month format and then turn to int
     spark.udf.register("changeDate", (x:Int)=>simpleDateFormat.format(new Date(x*1000L)).toInt)

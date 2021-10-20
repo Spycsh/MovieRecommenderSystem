@@ -47,9 +47,9 @@ case class MongoConfig(uri: String, db:String)
 
 object DataLoader {
   // define the invariants
-  val MOVIE_DATA_PATH = "C:\\Users\\Spycsh\\Desktop\\MovieRecommenderSystem\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\movies.csv"
-  val RATING_DATA_PATH = "C:\\Users\\Spycsh\\Desktop\\MovieRecommenderSystem\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\ratings.csv"
-  val TAG_DATA_PATH = "C:\\Users\\Spycsh\\Desktop\\MovieRecommenderSystem\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\tags.csv"
+  val MOVIE_DATA_PATH = ".\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\movies.csv"
+  val RATING_DATA_PATH = ".\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\ratings.csv"
+  val TAG_DATA_PATH = ".\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\tags.csv"
 
   // table names
   val MONGODB_MOVIE_COLLECTION = "Movie"

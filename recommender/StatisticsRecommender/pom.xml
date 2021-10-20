@@ -11,7 +11,7 @@
 
     <artifactId>StatisticsRecommender</artifactId>
     <dependencies>
-        <!-- Spark的依赖引入 -->
+        <!-- Spark -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.11</artifactId>
@@ -20,12 +20,12 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.11</artifactId>
         </dependency>
-        <!-- 引入Scala -->
+        <!-- Scala -->
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
         </dependency>
-        <!-- 加入MongoDB的驱动 -->
+        <!-- MongoDB -->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>casbah-core_2.11</artifactId>

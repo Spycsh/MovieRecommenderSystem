@@ -36,7 +36,7 @@
     </properties>
 
     <dependencies>
-        <!--引入共同的日志管理工具-->
+        <!--log management tool-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
@@ -60,13 +60,13 @@
     </dependencies>
 
     <build>
-        <!--声明并引入子项目共有的插件-->
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.6.1</version>
-                <!--所有的编译用JDK1.8-->
+                <!--JDK1.8-->
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -75,7 +75,7 @@
         </plugins>
         <pluginManagement>
             <plugins>
-                <!--maven的打包插件-->
+                <!--maven-->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
@@ -90,13 +90,13 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!--该插件用于将scala代码编译成class文件-->
+                <!--compile scala code to class file-->
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
                     <version>3.2.2</version>
                     <executions>
-                        <!--绑定到maven的编译阶段-->
+                        <!--maven compile-->
                         <execution>
                             <goals>
                                 <goal>compile</goal>

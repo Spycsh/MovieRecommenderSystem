@@ -7,7 +7,7 @@ import org.apache.spark.mllib.recommendation.{ALS, MatrixFactorizationModel, Rat
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
-// 选出最好的(rank, iterations, lambda)，使RMSE最小
+// get best (rank, iterations, lambda), in order to get min RMSE(root-mean-square error)
 object ALSTrainer {
   def main(args: Array[String]): Unit = {
     val config = Map(
@@ -18,14 +18,14 @@ object ALSTrainer {
 
     val sparkConf = new SparkConf().setMaster(config("spark.cores")).setAppName("OfflineRecommender")
 
-    // 创建一个SparkSession
+    // create a SparkSession
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()
     // No implicits found... solution
     import spark.implicits._
 
     implicit val mongoConfig = MongoConfig(config("mongo.uri"), config("mongo.db"))
 
-    // 加载评分数据
+    // load rating table from database
     val ratingRDD = spark.read
       .option("uri", mongoConfig.uri)
       .option("collection", MONGODB_RATING_COLLECTION)
@@ -33,15 +33,15 @@ object ALSTrainer {
       .load()
       .as[MovieRating]
       .rdd
-      .map( rating => Rating( rating.uid, rating.mid, rating.score ) )    // 转化成rdd，并且去掉时间戳
+      .map( rating => Rating( rating.uid, rating.mid, rating.score ) )    // translate to rdd, and remove timestamps
       .cache()
 
-    // 随机切分数据集，生成训练集和测试集
+    //randomly generate datasets for training and testing
     val splits = ratingRDD.randomSplit(Array(0.8, 0.2))
     val trainingRDD = splits(0)
     val testRDD = splits(1)
 
-    // 模型参数选择，输出最优参数，根据第三个元素RMSE来选择
+    //get parameters, using RMSE (the third element) to choose the best params
     adjustALSParam(trainingRDD, testRDD)
 
     spark.close()
@@ -51,25 +51,26 @@ object ALSTrainer {
     val result = for( rank <- Array(50, 100, 200, 300); lambda <- Array( 0.01, 0.1, 1 ))
       yield {
         val model = ALS.train(trainData, rank, 5, lambda)
-        // 计算当前参数对应模型的rmse，返回Double
+
+        //calculate current RMSE, return double
         val rmse = getRMSE( model, testData )
         ( rank, lambda, rmse )
       }
-    // 控制台打印输出最优参数
+    // console output
     println(result.minBy(_._3))
   }
 
   def getRMSE(model: MatrixFactorizationModel, data: RDD[Rating]): Double = {
-    // 计算预测评分
+    // calculate predict score
     val userProducts = data.map(item => (item.user, item.product))
     val predictRating = model.predict(userProducts)
 
-    // 以uid，mid作为外键，inner join实际观测值和预测值
-    // 以user, product 对应一个预测值和一个真实值
+    //use uid and mid as foreign keys, inner join the real scores and predict scores
+    //use tuple (user, product) for a predict value and a real value
     val observed = data.map( item => ( (item.user, item.product), item.rating ) )
     val predict = predictRating.map( item => ( (item.user, item.product), item.rating ) )
-    // 内连接，得到(uid, mid),(actual, predict)
-    // RMSE 计算
+    // inner join, get(uid, mid),(actual, predict)
+    // calculate RMSE
     sqrt(
       observed.join(predict).map{
         case ( (uid, mid), (actual, pre) ) =>

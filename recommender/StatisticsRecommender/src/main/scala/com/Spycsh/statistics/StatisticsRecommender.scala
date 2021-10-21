@@ -91,8 +91,10 @@ object StatisticsRecommender {
 
     // 4. Each genre Top movie
     // all genre types
-    val genres = List("Action","Adventure","Animation","Comedy","Crime","Documentary","Drama","Family","Fantasy","Foreign","History","Horror","Music","Mystery"
-      ,"Romance","Science","Tv","Thriller","War","Western")
+
+//    val genres = List("Action","Adventure","Animation","Comedy","Crime","Documentary","Drama","Family","Fantasy","Foreign","History","Horror","Music","Mystery"
+//      ,"Romance","Science","Tv","Thriller","War","Western")
+    val genres:List[String] = movieDF.as[Movie].flatMap(x => x.genres.split("\\|")).dropDuplicates().collect().toList
     // put average rating into movie table, add one column, inner join
     val movieWithScore = movieDF.join(averageMoviesDF, "mid")
     // firstly we do Cartesian product to genres and movieWithScore

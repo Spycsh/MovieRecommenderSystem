@@ -6,12 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ContentRecommender" />
         <module name="DataLoader" />
         <module name="StatisticsRecommender" />
         <module name="StreamingRecommender" />
         <module name="OfflineRecommender" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ContentRecommender" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

@@ -2,14 +2,6 @@ jdk 1.8
 
 run dataloader
 
-###########To access elasticsearch###########
-=> cd ~\elasticsearch-5.6.2\bin
-=> elasticsearch
-access localhost:9200
-http://localhost:9200/_cat/indices
-http://localhost:9200/_search?pretty
-
-
 ###########To see mongo#################
 => mongo
 > show dbs
@@ -94,7 +86,5 @@ Such output will come out
 
 Then you realize that you save the recommended movies list for a user related to his real-time click into the mongo DB.
 
-##########
-For content recommender
-> db.ContentMovieRecs.find().pretty()
+
 

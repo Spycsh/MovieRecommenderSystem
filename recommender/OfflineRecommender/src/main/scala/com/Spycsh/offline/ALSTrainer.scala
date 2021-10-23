@@ -57,6 +57,7 @@ object ALSTrainer {
         ( rank, lambda, rmse )
       }
     // console output
+    // (200,0.1,0.9171834194767383)
     println(result.minBy(_._3))
   }
 

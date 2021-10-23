@@ -106,7 +106,7 @@ object OfflineRecommender {
           ( a._1, ( b._1, simScore ) )
         }
       }
-      .filter(_._2._2 > 0.6)    // filter out the records whose similarity > 0.6
+      .filter(_._2._2 > 0.9)    // filter out the records whose similarity > 0.9
       .groupByKey()
       .map{
         case (mid, items) => MovieRecs( mid, items.toList.sortWith(_._2 > _._2).map(x => Recommendation(x._1, x._2)) )

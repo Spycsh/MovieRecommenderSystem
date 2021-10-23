@@ -35,11 +35,12 @@ object StreamingRecommender {
   val MONGODB_MOVIE_RECS_COLLECTION = "MovieRecs"
 
   def main(args: Array[String]): Unit = {
+
     val config = Map(
-      "spark.cores" -> "local[*]",
-      "mongo.uri" -> "mongodb://localhost:27017/recommender",
-      "mongo.db" -> "recommender",
-      "kafka.topic" -> "recommender"
+      "spark.cores" -> "local[4]",
+      "mongo.uri" -> "mongodb://localhost:27017/recommender2021",
+      "mongo.db" -> "recommender2021",
+      "kafka.topic" -> "recommender2021"
     )
 
     val sparkConf = new SparkConf().setMaster(config("spark.cores")).setAppName("StreamingRecommender")
@@ -52,8 +53,8 @@ object StreamingRecommender {
     val ssc = new StreamingContext(sc, Seconds(2)) // batch duration
 
     import spark.implicits._
-    implicit val mongoConfig = MongoConfig(config("mongo.uri"), config("mongo.db"))
 
+    implicit val mongoConfig = MongoConfig(config("mongo.uri"), config("mongo.db"))
     // broadcast the movie similarity matrix
     // it is better to handle larger data with broadcasting
     // because instead of giving every task on a worker a copy of the big data
@@ -69,15 +70,15 @@ object StreamingRecommender {
       .map{ movieRecs =>
         (movieRecs.mid, movieRecs.recs.map(x=>(x.mid,x.score)).toMap )
       }.collectAsMap()
+
     // 2. broadcast
     val simMovieMatrixBroadCast = sc.broadcast(simMovieMatrix)
-
     // kafka parameters for connection
     val kafkaParam = Map(
       "bootstrap.servers" -> "localhost:9092",
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
-      "group.id" -> "recommender",
+      "group.id" -> "recommender2021",
       "auto.offset.reset" -> "latest"
     )
     // DStream
@@ -86,13 +87,13 @@ object StreamingRecommender {
       LocationStrategies.PreferConsistent,
       ConsumerStrategies.Subscribe[String, String]( Array(config("kafka.topic")), kafkaParam )
     )
-
     // transfer UID|MID|SCORE|TIMESTAMP into rating stream
     val ratingStream = kafkaStream.map{
       msg =>
         val attr = msg.value().split("\\|")
         ( attr(0).toInt, attr(1).toInt, attr(2).toDouble, attr(3).toInt )
     }
+
 
     // continue to do streaming
     // core algorithms
@@ -116,6 +117,7 @@ object StreamingRecommender {
           }
         }
     }
+
 
     // start to receive and handle data
     ssc.start()
@@ -171,7 +173,6 @@ object StreamingRecommender {
     for( candidateMovie <- candidateMovies; userRecentlyRating <- userRecentlyRatings){
       // get the similarity of the candidate movies and the recently rating movie
       val simScore = getMoviesSimScore(candidateMovie, userRecentlyRating._1, simMovies)
-
       if(simScore > 0.7) {
         // calculate the basic score of the candidate movie
         scores += ((candidateMovie, simScore * userRecentlyRating._2))

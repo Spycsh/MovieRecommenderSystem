@@ -1,29 +1,14 @@
 # RecommenderSystem
 
-- [x] create Maven project, specify parent-children dependencies
-
-- [x] establish the connection to Mongo database
-
-- [x] recommender based on statistics
-
-- [x] offline recommender
-
-- [x] streaming recommender
-
-- [x] content recommender
-
 ## Modules introduction
 
 Here gives brief introduction of different modules
 
 ### DataLoader
 
-Tables:
-1. Movie: (mid, name, decri, timelong, shoot, issue, language, genres, director, actors)
-2. Rating: (uid, mid, score, timestamp)
-3. User: (uid, username, password, first, genres, timestamp) 
+Dataset source: [MovieLens](https://grouplens.org/datasets/movielens/)
 
-preprocess from `movies.csv`, `ratings.csv`, `tags.csv` and store in MongoDB
+preprocess the `movies.csv`, `ratings.csv`, `tags.csv` and store in MongoDB
 
 ### StatisticsRecommender
 Recommend movies based directly on statistics, and
@@ -49,27 +34,125 @@ and process, compute the real-time recommendation list to update the MongoDB
 * from similarity matrix, extract N most similar movies as the candidate list
 * for every candidate movie, calculate the score and sort as current user's recommendation list
 
-$Score_q = \frac{\sigma_r(sim(q,r) * R_r)}{sim_sum} + log(max(incount, 1)) - log(max(recount, 1))$
 
-q: the candidate movie
-r: the movie the user has rated (data from Kafka stream)
-sim(q, r): similarity of the rated movie and candidate movie
-log(max(incount, 1)): log of the max of the positive rate score(from 3 to 5) and 1, which means if no rating then this term is log(1) = 0
-log(max(recount, 1)): log of the max of the negative rate score(from 1 to 3) and 1, which means if no rating then this term is log(1) = 0
+Notes:
 
-The two log terms is to indicate that although there is a high basic score of the movie q based on similarity, if the user has a low score, 
-it should be prevented from being recommended.
+```
+jdk 1.8
 
-### ContentRecommender
-From the DataLoader module we store the data of a movie with attributes like movie id, name, description, timelong, issue, 
-    genres, shoot time, language, actors and directors. We can assume that the key attributes are the genres, the description, actors, director.
-    Especially the genres attribute which we can use to do a cold start (ask users which genres they prefer when they first register and we have no user profile of him).
-    We can simply apply one-hot encoding on genres (flattern) but usually different genres should have different weights. (e.g. Most war films are action films so a film with a war tag should be more valuable to use)
-    In such case can we use tf-idf algorithms, rather than ALS, to solve the problem.
+run dataloader
 
-In this system tf-idf is used on the genres features and generate a Table named ContentMovieRecs in MongoDB, and this part
-can be also combined with Kafka streaming as implemented in Streaming recommender module.
+###########To see mongo#################
+=> mongo
+> show dbs
+> use recommender
+> show tables
+> db.Movie.find().count()   // 2791
 
+###################
+// test statisticRecommender
+// execute scala file
+// in mongo
+> show tables          // exist 4 more tables
+> db.AverageMovies.findOne()
+> db.GenresTopMovies.find().pretty()
 
+############To access redis##############
+https://www.runoob.com/redis/redis-install.html
+
+In one cmd
+=> redis-server.exe redis.windows.conf
+
+In another cmd
+=> redis-cli.exe -h 127.0.0.1 -p 6379
+127.0.0.1:6379> set myKey abc
+127.0.0.1:6379> get myKey
+127.0.0.1:6379> RPUSH mylist "one"
+127.0.0.1:6379> lrange mylist 0 1
+
+#############
+1) For streaming recommender, you should firstly open mongo, redis server, and redis-cli as above
+
+In redis-cli, to simulate a user's rate of an item (stand for he has watched it), enter
+127.0.0.1:6379> lpush uid:666 1079:4.0 9642:5.0 1213:4.5 2009:2.5 555:4.0 373:1.5 8628:5.0
+127.0.0.1:6379> keys *
+there should be a key-value pair about the uid:2 user, you can see the records with
+127.0.0.1:6379> lrange uid:666 0 -1
+
+2) Then you should open the zookeeper, Kafka server and the Kafka producer
+In one cmd, open the zookeeper
+=> C:\kafka\bin\windows>zookeeper-server-start.bat ..\..\config\zookeeper.properties
+then open the Kafka
+=> C:\kafka\bin\windows>kafka-server-start.bat ..\..\config\server.properties
+you can use jps to see the on-going java processes
+=> C:\Users\Spycsh>jps
+  11808 StreamingRecommender
+  14100
+  21844 NailgunRunner
+  11928 Jps
+  15560 QuorumPeerMain
+  20860 Kafka
+
+then open the Kafka producer, you should assign the topic "recommender" as in the code
+=> C:\kafka\bin\windows>kafka-console-producer.bat --broker-list localhost:9092 --topic recommender
+
+3) Then you can run the StreamingRecommender.scala
+In the Kafka producer cmd you can:
+transfer one record to test in the format "UID|MID|SCORE|TIMESTAMP" into the rating stream
+Notice that if you want to see results in 4) this record should have the uid that already map to a record in redis
+
+> 666|4709|4.5|1564476435
+
+Then you will find one line rating data coming! >>>>>>>>>>>>>> in the console of the program
+
+4) See the results
+Then in the cmd you start your mongo service
+> use recommender
+you will find a new database called StreamRecs
+and you can show the final recommended movies with
+> db.StreamRecs.find().pretty()
+Such output will come out
+> db.StreamRecs.find().pretty()
+{
+        "_id" : ObjectId("61740f6040f62e2e38e7f51b"),
+        "uid" : 666,
+        "recs" : [
+                {
+                        "mid" : 150401,
+                        "score" : 4.101390021148716
+                },
+                {
+                        "mid" : 4492,
+                        "score" : 3.640862619666599
+                },
+                {
+                        "mid" : 47950,
+                        "score" : 3.6367343763541253
+                },
+                {
+                        "mid" : 2099,
+                        "score" : 3.6132755054875774
+                },
+                {
+                        "mid" : 7132,
+                        "score" : 3.262721880408015
+                },
+                {
+                        "mid" : 69604,
+                        "score" : 3.182491800795923
+                },
+                {
+                        "mid" : 6314,
+                        "score" : 3.1748072413685127
+                },
+                {
+                        "mid" : 5915,
+                        "score" : 2.2652324373263535
+                }
+        ]
+}
+
+Then you realize that you save the recommended movies list for a user related to his real-time rating.
+```
 
 

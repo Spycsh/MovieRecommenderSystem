@@ -17,7 +17,6 @@ import scala.util.matching.Regex
 case class Movie(mid: Int, title: String, genres: String)
 
 /**
- * see ratings.csv
  * uid: 1  (user id)
  * mid: 31
  * score: 2.5

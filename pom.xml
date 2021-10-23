@@ -13,7 +13,7 @@
     <modules>
         <module>recommender</module>
         <module>recommender/DataLoader</module>
-        <module>StatisticsRecommender</module>
+        <module>recommender/StatisticsRecommender</module>
         <module>recommender/OfflineRecommender</module>
     </modules>
 

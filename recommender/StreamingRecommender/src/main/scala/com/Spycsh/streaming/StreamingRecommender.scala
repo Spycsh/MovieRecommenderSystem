@@ -44,6 +44,7 @@ object StreamingRecommender {
     )
 
     val sparkConf = new SparkConf().setMaster(config("spark.cores")).setAppName("StreamingRecommender")
+      //.set("spark.memory.offHeap.enabled", "true").set("spark.memory.offHeap.size","1000MB")
 
     // create a SparkSession
     val spark = SparkSession.builder().config(sparkConf).getOrCreate()

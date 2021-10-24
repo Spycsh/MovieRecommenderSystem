@@ -8,7 +8,7 @@ Here gives brief introduction of different modules
 
 Dataset source: [MovieLens](https://grouplens.org/datasets/movielens/)
 
-preprocess the `movies.csv`, `ratings.csv`, `tags.csv` and store in MongoDB
+preprocess the `movies.csv` and `ratings.csv` and store in MongoDB
 
 ### StatisticsRecommender
 Recommend movies based directly on statistics, and
@@ -47,7 +47,7 @@ run dataloader
 > show dbs
 > use recommender
 > show tables
-> db.Movie.find().count()   // 2791
+> db.Movie.find().count()   
 
 ###################
 // test statisticRecommender

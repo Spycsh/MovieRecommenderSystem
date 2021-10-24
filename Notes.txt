@@ -7,7 +7,7 @@ run dataloader
 > show dbs
 > use recommender
 > show tables
-> db.Movie.find().count()   // 2791
+> db.Movie.find().count()
 
 ###################
 // test statisticRecommender

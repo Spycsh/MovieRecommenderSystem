@@ -1,3 +1,6 @@
+Notes:
+
+```
 jdk 1.8
 
 run dataloader
@@ -34,10 +37,10 @@ In another cmd
 1) For streaming recommender, you should firstly open mongo, redis server, and redis-cli as above
 
 In redis-cli, to simulate a user's rate of an item (stand for he has watched it), enter
-127.0.0.1:6379> lpush uid:2 265:5.0 266:5.0 272:3.0 273:4.0 292:3.0 296:4.0 300:3.0
+127.0.0.1:6379> lpush uid:666 1079:4.0 9642:5.0 1213:4.5 2009:2.5 555:4.0 373:1.5 8628:5.0
 127.0.0.1:6379> keys *
 there should be a key-value pair about the uid:2 user, you can see the records with
-127.0.0.1:6379> lrange uid:2 0 -1
+127.0.0.1:6379> lrange uid:666 0 -1
 
 2) Then you should open the zookeeper, Kafka server and the Kafka producer
 In one cmd, open the zookeeper
@@ -59,7 +62,10 @@ then open the Kafka producer, you should assign the topic "recommender" as in th
 3) Then you can run the StreamingRecommender.scala
 In the Kafka producer cmd you can:
 transfer one record to test in the format "UID|MID|SCORE|TIMESTAMP" into the rating stream
-> 2|1271|4.5|1554276432
+Notice that if you want to see results in 4) this record should have the uid that already map to a record in redis
+
+> 666|4709|4.5|1564476435
+
 Then you will find one line rating data coming! >>>>>>>>>>>>>> in the console of the program
 
 4) See the results
@@ -69,22 +75,45 @@ you will find a new database called StreamRecs
 and you can show the final recommended movies with
 > db.StreamRecs.find().pretty()
 Such output will come out
+> db.StreamRecs.find().pretty()
 {
-        "_id" : ObjectId("600eee1cb886bb5a009cdb8d"),
-        "uid" : 2,
+        "_id" : ObjectId("61740f6040f62e2e38e7f51b"),
+        "uid" : 666,
         "recs" : [
                 {
-                        "mid" : 3038,
-                        "score" : 3.5943022980420656
+                        "mid" : 150401,
+                        "score" : 4.101390021148716
                 },
                 {
-                        "mid" : 2927,
-                        "score" : 3.531732510562273
+                        "mid" : 4492,
+                        "score" : 3.640862619666599
                 },
-                ....
-                ]}
+                {
+                        "mid" : 47950,
+                        "score" : 3.6367343763541253
+                },
+                {
+                        "mid" : 2099,
+                        "score" : 3.6132755054875774
+                },
+                {
+                        "mid" : 7132,
+                        "score" : 3.262721880408015
+                },
+                {
+                        "mid" : 69604,
+                        "score" : 3.182491800795923
+                },
+                {
+                        "mid" : 6314,
+                        "score" : 3.1748072413685127
+                },
+                {
+                        "mid" : 5915,
+                        "score" : 2.2652324373263535
+                }
+        ]
+}
 
-Then you realize that you save the recommended movies list for a user related to his real-time click into the mongo DB.
-
-
-
+Then you realize that you save the recommended movies list for a user related to his real-time rating.
+```

@@ -48,12 +48,10 @@ object DataLoader {
   // define the invariants
   val MOVIE_DATA_PATH = ".\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\movies.csv"
   val RATING_DATA_PATH = ".\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\ratings.csv"
-  val TAG_DATA_PATH = ".\\recommender\\DataLoader\\src\\main\\resources\\ml-latest-small\\tags.csv"
 
   // table names
   val MONGODB_MOVIE_COLLECTION = "Movie"
   val MONGODB_RATING_COLLECTION = "Rating"
-  val MONGODB_TAG_COLLECTION = "Tag"
 
   def main(args:Array[String]): Unit = {
     val config = Map(
@@ -95,33 +93,27 @@ object DataLoader {
     }).toDF()
 
 
-    val tagRDD = spark.sparkContext.textFile(TAG_DATA_PATH)
-    // convert to dataframe
-    val firstLineOfTagRDD = tagRDD.first()
-    val tagDF = tagRDD.filter(item => !item.equals(firstLineOfTagRDD)).map(item=>{
-      val attr = item.split(",")
-      Tag(attr(0).toInt, attr(1).toInt, attr(2).trim, attr(3).toInt)
-    }).toDF()
+
 
     // declare an implicit config
     implicit val mongoConfig =
       MongoConfig(config("mongo.uri"), config("mongo.db"))
 
     // store data into mongoDB
-    storeDataInMongoDB(movieDF, ratingDF, tagDF)
+    storeDataInMongoDB(movieDF, ratingDF)
 
     spark.stop()
 
   }
 
-  def storeDataInMongoDB(movieDF:DataFrame, ratingDF:DataFrame, tagDF:DataFrame)
+  def storeDataInMongoDB(movieDF:DataFrame, ratingDF:DataFrame)
                         (implicit  mongoConfig: MongoConfig): Unit = {
     // create a connection to MongoDB
     val mongoClient = MongoClient(MongoClientURI(mongoConfig.uri))
     // if there is a corresponding database in MongoDB, delete it
     mongoClient(mongoConfig.db)(MONGODB_MOVIE_COLLECTION).dropCollection()
     mongoClient(mongoConfig.db)(MONGODB_RATING_COLLECTION).dropCollection()
-    mongoClient(mongoConfig.db)(MONGODB_TAG_COLLECTION).dropCollection()
+
 
     // write to MongoDB
     movieDF
@@ -141,21 +133,13 @@ object DataLoader {
       .format("com.mongodb.spark.sql")
       .save()
 
-    // write to MongoDB
-    tagDF
-      .write
-      .option("uri",mongoConfig.uri)
-      .option("collection", MONGODB_TAG_COLLECTION)
-      .mode("overwrite")
-      .format("com.mongodb.spark.sql")
-      .save()
+
 
     // create index for tables 1 ascending -1 descending
     mongoClient(mongoConfig.db)(MONGODB_MOVIE_COLLECTION).createIndex(MongoDBObject("mid" -> 1))
     mongoClient(mongoConfig.db)(MONGODB_RATING_COLLECTION).createIndex(MongoDBObject("uid" -> 1))
     mongoClient(mongoConfig.db)(MONGODB_RATING_COLLECTION).createIndex(MongoDBObject("mid" -> 1))
-    mongoClient(mongoConfig.db)(MONGODB_TAG_COLLECTION).createIndex(MongoDBObject("uid" -> 1))
-    mongoClient(mongoConfig.db)(MONGODB_TAG_COLLECTION).createIndex(MongoDBObject("mid" -> 1))
+
     //close MongoDB connection
     mongoClient.close()
   }
